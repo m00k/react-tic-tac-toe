@@ -5,48 +5,63 @@ export default class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      history: [
-        {squares: Array(9).fill(null)},
+      moves: [
+        {currentPlayer: 'X', squares: Array(9).fill(null)},
       ],
-      currentPlayer: 'X',
+      currMoveIdx: 0
     };
   }
 
   handleClick(i) {
-    const history = this.state.history;
-    const current = history[history.length - 1];
-    const squares = current.squares.slice();
+    const moves = this.state.moves.slice(0, this.state.currMoveIdx + 1);
+    const move = moves[this.state.currMoveIdx];
+    const squares = move.squares.slice();
     if (calcWinner(squares) || squares[i]) {
       return;
     }
-    const currentPlayer = this.state.currentPlayer === 'X' ? 'O' : 'X';
-    squares[i] = this.state.currentPlayer;
+    const currentPlayer = move.currentPlayer === 'X' ? 'O' : 'X';
+    squares[i] = move.currentPlayer;
 
     this.setState({
-      history: [...history, {squares}],
-      currentPlayer,
+      moves: [...moves, {currentPlayer, squares}],
+      currMoveIdx: this.state.currMoveIdx + 1,
     });
   }
 
+  jumpToMove(moveIdx) {
+    this.setState({currMoveIdx:moveIdx});
+  }
+
   render() {
-    const history = this.state.history;
-    const current = history[history.length - 1];
-    const winner = calcWinner(current.squares);
+    const moves = this.state.moves;
+    const move = moves[this.state.currMoveIdx];
+    const winner = calcWinner(move.squares);
     const status = winner
       ? `Winner: ${winner}`
-      : `Next player: ${this.state.currentPlayer}`;
+      : `Next player: ${move.currentPlayer}`;
+
+    const history = moves.map((move, idx) => {
+      const desc = idx
+        ? `Go to #${idx}`
+        : `Go to start`;
+      return (
+        <li key={idx}>
+          <button onClick={() => this.jumpToMove(idx)}>{desc}</button>
+        </li>
+      );
+    });
 
     return (
       <div className="game">
         <div className="game-board">
           <Board 
-            squares={current.squares}
+            squares={move.squares}
             onClick={(i) => this.handleClick(i)}
           />
         </div>
         <div className="game-info">
           <div className="status">{status}</div>
-          <ol>{}</ol>
+          <ol>{history}</ol>
         </div>
       </div>
     )
